@@ -311,6 +311,18 @@ footer {
 footer p {
   font-size: 1.1rem;
 }
+.visitor-counter {
+  text-align: center;
+  color: #ffffff;
+  background-color: #333;
+  padding: 10px;
+  font-family: 'Cairo', sans-serif;
+  font-size: 16px;
+  border-radius: 10px;
+  margin-top: 20px;
+  box-shadow: 0 0 5px rgba(0,0,0,0.2);
+}
+
 
 /* Responsive Design */
 @media (max-width: 768px) {
