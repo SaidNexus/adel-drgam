@@ -3,12 +3,13 @@ import os, json
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
-app.secret_key = 'secret@123'  # 🔐 مفتاح سري للجلسات
+app.secret_key = 'secret@123'  # مفتاح الجلسات
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 app.config['BOOKS_FILE'] = 'books.json'
+app.config['COUNTER_FILE'] = 'counter.json'
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
-# إعدادات تسجيل الدخول
+# بيانات الدخول
 ADMIN_USERNAME = 'drgam'
 ADMIN_PASSWORD = 'drgam'
 
@@ -24,11 +25,30 @@ def save_books(books):
     with open(app.config['BOOKS_FILE'], 'w', encoding='utf-8') as f:
         json.dump(books, f, ensure_ascii=False, indent=2)
 
+# تحميل العداد
+def load_counter():
+    if os.path.exists(app.config['COUNTER_FILE']):
+        with open(app.config['COUNTER_FILE'], 'r', encoding='utf-8') as f:
+            return json.load(f).get("views", 0)
+    return 0
+
+# زيادة العداد
+def increment_counter():
+    views = load_counter() + 1
+    with open(app.config['COUNTER_FILE'], 'w', encoding='utf-8') as f:
+        json.dump({"views": views}, f)
+    return views
+
 # الصفحة الرئيسية
 @app.route('/')
 @app.route('/index.html')
 def home():
-    return render_template('index.html')
+    if not session.get('counted'):
+        views = increment_counter()
+        session['counted'] = True
+    else:
+        views = load_counter()
+    return render_template('index.html', views=views)
 
 # صفحة about
 @app.route('/about.html')
@@ -51,9 +71,10 @@ def login():
 @app.route('/logout')
 def logout():
     session.pop('logged_in', None)
+    session.pop('counted', None)  # نعيد تفعيل العداد لو خرج
     return redirect('/login')
 
-# لوحة التحكم (محمية)
+# لوحة التحكم
 @app.route('/admin', methods=['GET', 'POST'])
 def admin():
     if not session.get('logged_in'):
@@ -77,12 +98,12 @@ def admin():
 
     return render_template('dashboard.html', books=load_books())
 
-# API لجلب الكتب
+# API للكتب
 @app.route('/api/books')
 def get_books():
     return jsonify(load_books())
 
-# صفحة عرض الكتاب
+# صفحة عرض كتاب
 @app.route('/book.html')
 def view_book():
     book_id = request.args.get('id', type=int)
