@@ -2,3 +2,5 @@ Flask
 requests
 cloudinary
 python-dotenv
+supabase
+supabase-py
