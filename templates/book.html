@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>عادل درغام - تفاصيل الكتاب</title>
+  <title>عادل ضرغام - تفاصيل الكتاب</title>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <style>
@@ -17,19 +17,40 @@
       font-size: 1.1rem;
       border-radius: 12px;
     }
+
     .book-content-full p {
       margin-bottom: 1.5rem;
+    }
+
+    .chapter {
+      margin-top: 1.5rem;
+      padding: 1rem;
+      background: #f5f5f5;
+      border-radius: 8px;
+    }
+
+    .chapter-title {
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+    }
+
+    .book-img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 12px;
+      margin-bottom: 1rem;
     }
   </style>
 </head>
 <body>
+
   <header class="main-header">
     <div class="container">
-      <h1 class="site-title">عادل درغام</h1> 
+      <h1 class="site-title">عادل ضرغام</h1>
       <nav>
         <ul class="nav-links">
-          <li><a href="index.html">الرئيسية</a></li>
-          <li><a href="about.html">نبذة</a></li>
+          <li><a href="{{ url_for('home') }}">الرئيسية</a></li>
+          <li><a href="{{ url_for('about') }}">نبذة</a></li>
         </ul>
       </nav>
     </div>
@@ -40,58 +61,67 @@
       <h2 class="section-title" id="book-title"></h2>
       <div class="book-content">
         <img src="" alt="" class="book-img" id="book-image">
-        <div id="chapters"></div>
         <div id="book-content-full" class="book-content-full"></div>
+        <div id="chapters"></div>
       </div>
     </section>
   </main>
 
   <footer>
     <div class="container">
-      <p>© 2025 عادل درغام - جميع الحقوق محفوظة</p>
+      <p>© 2025 عادل ضرغام - جميع الحقوق محفوظة</p>
     </div>
   </footer>
 
-<script>
-  window.onload = async function () {
-    const params = new URLSearchParams(window.location.search);
-    const bookId = params.get('id');
+  <script>
+    window.onload = async function () {
+      const params = new URLSearchParams(window.location.search);
+      const bookId = parseInt(params.get('id'), 10);
 
-    try {
-      const response = await fetch('/api/books');
-      const books = await response.json();
+      try {
+        const response = await fetch('/api/books');
+        const books = await response.json();
 
-      if (bookId && books[bookId]) {
-        const book = books[bookId];
-        document.getElementById('book-title').textContent = book.title;
-        document.getElementById('book-image').src = book.image;
-        document.getElementById('book-image').alt = book.title;
+        if (!isNaN(bookId) && bookId >= 0 && bookId < books.length) {
+          const book = books[bookId];
 
-        const chaptersDiv = document.getElementById('chapters');
-        if (book.chapters && Array.isArray(book.chapters)) {
-          book.chapters.forEach(chapter => {
-            const chapterElement = document.createElement('div');
-            chapterElement.className = 'chapter';
-            chapterElement.innerHTML = `
-              <h3 class="chapter-title">${chapter.title}</h3>
-              <p>${chapter.content}</p>
-            `;
-            chaptersDiv.appendChild(chapterElement);
-          });
+          // العنوان
+          document.getElementById('book-title').textContent = book.title;
+
+          // الصورة
+          const bookImage = document.getElementById('book-image');
+          bookImage.src = book.image;
+          bookImage.alt = `غلاف كتاب: ${book.title}`;
+
+          // المحتوى الكامل
+          if (book.content) {
+            document.getElementById('book-content-full').textContent = book.content;
+          }
+
+          // الفصول (إن وجدت)
+          if (Array.isArray(book.chapters)) {
+            const chaptersDiv = document.getElementById('chapters');
+            book.chapters.forEach(chapter => {
+              const chapterElement = document.createElement('div');
+              chapterElement.className = 'chapter';
+              chapterElement.innerHTML = `
+                <h3 class="chapter-title">${chapter.title}</h3>
+                <p>${chapter.content}</p>
+              `;
+              chaptersDiv.appendChild(chapterElement);
+            });
+          }
+
+        } else {
+          document.getElementById('book-title').textContent = 'الكتاب غير موجود';
+          document.getElementById('book-content-full').textContent = '';
+          document.getElementById('chapters').innerHTML = '<p>لم يتم العثور على تفاصيل الكتاب.</p>';
         }
-
-        if (book.content) {
-          const contentDiv = document.getElementById('book-content-full');
-          contentDiv.textContent = book.content;
-        }
-      } else {
-        document.getElementById('book-title').textContent = 'الكتاب غير موجود';
-        document.getElementById('chapters').innerHTML = '<p>لم يتم العثور على تفاصيل الكتاب.</p>';
+      } catch (error) {
+        console.error("حدث خطأ أثناء تحميل تفاصيل الكتاب:", error);
+        document.getElementById('book-title').textContent = 'خطأ في تحميل البيانات';
       }
-    } catch (error) {
-      console.error("حدث خطأ أثناء تحميل تفاصيل الكتاب:", error);
-    }
-  };
-</script>
+    };
+  </script>
 </body>
 </html>
