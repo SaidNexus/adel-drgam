@@ -57,10 +57,17 @@ def view_book(book_id):
     return "الكتاب غير موجود", 404
 
 # صفحة تسجيل الدخول
-@app.route('/admin', methods=['GET', 'POST'])
+@app.route('/admin')
 def admin():
     if not session.get("logged_in"):
         return render_template('login.html')
+    return redirect('/dashboard')
+
+# لوحة التحكم
+@app.route('/dashboard', methods=['GET', 'POST'])
+def dashboard():
+    if not session.get("logged_in"):
+        return redirect('/admin')
     
     if request.method == 'POST':
         title = request.form['title']
@@ -84,21 +91,21 @@ def admin():
         books.append(new_book)
         save_books(books)
 
-        return redirect('/admin')
+        return redirect('/dashboard')
 
     books = load_books()
-    return render_template('login.html', books=books)
+    return render_template('dashboard.html', books=books)
 
 # حذف كتاب
 @app.route('/delete/<string:book_id>')
 def delete_book(book_id):
     if not session.get("logged_in"):
-        return redirect("/admin")
+        return redirect('/admin')
 
     books = load_books()
     books = [book for book in books if book.get("id") != book_id]
     save_books(books)
-    return redirect('/admin')
+    return redirect('/dashboard')
 
 # تسجيل الدخول
 @app.route('/login', methods=['GET', 'POST'])
@@ -113,13 +120,6 @@ def login():
         else:
             error = "كلمة السر أو اسم المستخدم غير صحيحة"
     return render_template('login.html', error=error)
-
-# لوحة التحكم الرئيسية
-@app.route('/dashboard')
-def dashboard():
-    if not session.get("logged_in"):
-        return redirect("/admin")
-    return render_template('dashboard.html')
 
 # تسجيل الخروج
 @app.route('/logout')
