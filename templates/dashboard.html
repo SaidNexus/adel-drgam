@@ -89,19 +89,12 @@
   <hr>
 
   <h2>📖 قائمة المقالات</h2>
-  {% for book in books %}
-    <div class="article">
-      <h3>{{ book.title }}</h3>
-      <img src="{{ book.image }}" width="100" alt="غلاف المقال">
-      {% if book.content is defined %}
-        <p>{{ book.content[:150] }}...</p>
-      {% else %}
-        <p style="color: gray;">لا يوجد محتوى لعرضه</p>
-      {% endif %}
-      <form method="POST" action="/delete_book/{{ loop.index0 }}" onsubmit="return confirm('هل أنت متأكد من حذف هذا المقال؟')">
-        <button type="submit">🗑️ حذف المقال</button>
-      </form>
-    </div>
-  {% endfor %}
+{% for book in books %}
+  <div>
+    <h3>{{ book.title }}</h3>
+    <img src="{{ book.image }}" width="100">
+    <a href="{{ url_for('delete_book', book_id=book.id) }}">حذف</a>
+  </div>
+{% endfor %}
 </body>
 </html>
