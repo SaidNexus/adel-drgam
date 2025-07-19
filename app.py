@@ -1,230 +1,121 @@
 from flask import Flask, render_template, request, redirect, jsonify, session, url_for
 import os
-import psycopg2
-import logging
+import requests
 from werkzeug.utils import secure_filename
+from supabase import create_client, Client
 import cloudinary
 import cloudinary.uploader
-from logging.handlers import RotatingFileHandler
 
+# إعداد Flask
 app = Flask(__name__)
+app.secret_key = 'secret@123'
 
-# ============ إعدادات التطبيق الأساسية ============
-app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-here')
-app.config['UPLOAD_FOLDER'] = 'static/uploads'  # للرفع المؤقت فقط
-os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-
-# ============ إعدادات Cloudinary ============
+# إعداد Cloudinary
 cloudinary.config(
-    cloud_name=os.environ.get('CLOUDINARY_CLOUD_NAME'),
-    api_key=os.environ.get('CLOUDINARY_API_KEY'),
-    api_secret=os.environ.get('CLOUDINARY_API_SECRET'),
-    secure=True
+    cloud_name="dbjm14xbf",
+    api_key="329374832568726",
+    api_secret="gPanxHzfrwl2DW7C3cHHEnpspeU"
 )
 
-# ============ إعدادات قاعدة البيانات ============
-def get_db_connection():
-    database_url = os.environ.get('DATABASE_URL')
-    if not database_url:
-        database_url = "postgresql://user:password@localhost:5432/mydb"
-    return psycopg2.connect(database_url)
+# إعداد Supabase
+SUPABASE_URL = "https://kbyxdwrmsxerpyrqhsyk.supabase.co"
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtieXhkd3Jtc3hlcnB5dnFoc3lrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI5NDMyMTcsImV4cCI6MjA2ODUxOTIxN30.uiBqnNe-7r4OteS7HjYqEh_CzhFRZJelKBqIJiBsAz8"
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-# ============ تهيئة قاعدة البيانات ============
-def init_db():
-    with get_db_connection() as conn:
-        with conn.cursor() as cur:
-            # جدول الكتب
-            cur.execute('''
-                CREATE TABLE IF NOT EXISTS books (
-                    id SERIAL PRIMARY KEY,
-                    title TEXT NOT NULL,
-                    image TEXT NOT NULL,
-                    content TEXT NOT NULL,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
-            ''')
-            
-            # جدول العداد
-            cur.execute('''
-                CREATE TABLE IF NOT EXISTS counter (
-                    id SERIAL PRIMARY KEY,
-                    views INTEGER DEFAULT 0
-                )
-            ''')
-            
-            # تهيئة العداد
-            cur.execute("INSERT INTO counter (views) SELECT 0 WHERE NOT EXISTS (SELECT 1 FROM counter)")
-        conn.commit()
+# بيانات الدخول
+ADMIN_USERNAME = 'drgam'
+ADMIN_PASSWORD = 'drgam'
 
-# ============ دوال مساعدة ============
-def load_books():
-    with get_db_connection() as conn:
-        with conn.cursor() as cur:
-            cur.execute("SELECT id, title, image, content FROM books ORDER BY created_at DESC")
-            return [
-                {"id": row[0], "title": row[1], "image": row[2], "content": row[3]}
-                for row in cur.fetchall()
-            ]
+# العداد البسيط
+views_counter = 0
 
-def load_counter():
-    with get_db_connection() as conn:
-        with conn.cursor() as cur:
-            cur.execute("SELECT views FROM counter LIMIT 1")
-            result = cur.fetchone()
-            return result[0] if result else 0
-
-def increment_counter():
-    with get_db_connection() as conn:
-        with conn.cursor() as cur:
-            cur.execute("UPDATE counter SET views = views + 1 RETURNING views")
-            new_views = cur.fetchone()[0]
-            conn.commit()
-            return new_views
-
-# ============ تهيئة التطبيق ============
-init_db()
-
-# ============ إعدادات التسجيل (Logging) ============
-if not app.debug:
-    file_handler = RotatingFileHandler('app.log', maxBytes=1024*1024, backupCount=10)
-    file_handler.setFormatter(logging.Formatter(
-        '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'))
-    app.logger.addHandler(file_handler)
-    app.logger.setLevel(logging.INFO)
-
-# ============ المسارات (Routes) ============
+# الصفحة الرئيسية
 @app.route('/')
 @app.route('/index.html')
 def home():
+    global views_counter
     if not session.get('counted'):
-        views = increment_counter()
+        views_counter += 1
         session['counted'] = True
-    else:
-        views = load_counter()
-    return render_template('index.html', views=views)
+    response = supabase.table("books").select("*").execute()
+    books = response.data or []
+    return render_template('index.html', books=books, views=views_counter)
 
+# صفحة about
 @app.route('/about.html')
 def about():
     return render_template('about.html')
 
+# تسجيل الدخول
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
-        if username == os.environ.get('ADMIN_USER', 'admin') and password == os.environ.get('ADMIN_PASS', 'admin'):
+        if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
             session['logged_in'] = True
             return redirect('/admin')
-        return render_template('login.html', error='بيانات الدخول غير صحيحة')
+        return render_template('login.html', error='بيانات غير صحيحة')
     return render_template('login.html')
 
+# تسجيل الخروج
 @app.route('/logout')
 def logout():
     session.pop('logged_in', None)
     session.pop('counted', None)
     return redirect('/login')
 
+# لوحة التحكم
 @app.route('/admin', methods=['GET', 'POST'])
 def admin():
     if not session.get('logged_in'):
         return redirect('/login')
 
     if request.method == 'POST':
-        if 'image' not in request.files:
-            return render_template('dashboard.html', error='لم يتم اختيار صورة', books=load_books())
-
+        title = request.form['title']
+        content = request.form['content']
         image = request.files['image']
-        if image.filename == '':
-            return render_template('dashboard.html', error='لم يتم اختيار صورة', books=load_books())
 
-        try:
-            # رفع الصورة إلى Cloudinary
-            upload_result = cloudinary.uploader.upload(
-                image,
-                folder="book_covers",
-                quality="auto",
-                fetch_format="auto",
-                width=800,
-                height=800,
-                crop="limit"
-            )
-            image_url = upload_result['secure_url']
+        # رفع الصورة إلى Cloudinary
+        result = cloudinary.uploader.upload(image)
+        image_url = result['secure_url']
 
-            # إضافة الكتاب إلى قاعدة البيانات
-            with get_db_connection() as conn:
-                with conn.cursor() as cur:
-                    cur.execute(
-                        "INSERT INTO books (title, image, content) VALUES (%s, %s, %s)",
-                        (request.form['title'], image_url, request.form['content'])
-                    )
-                    conn.commit()
-
-            return redirect('/admin')
-
-        except Exception as e:
-            app.logger.error(f"Upload failed: {str(e)}")
-            return render_template('dashboard.html', error='فشل رفع الصورة', books=load_books())
-
-    return render_template('dashboard.html', books=load_books())
-
-@app.route('/api/books')
-def get_books_api():
-    return jsonify(load_books())
-
-@app.route('/book.html')
-def view_book():
-    book_id = request.args.get('id', type=int)
-    if book_id is None:
-        return render_template('404.html'), 404
-
-    with get_db_connection() as conn:
-        with conn.cursor() as cur:
-            cur.execute("SELECT id, title, image, content FROM books WHERE id = %s", (book_id,))
-            book = cur.fetchone()
-
-    if book:
-        return render_template('book.html', book={
-            "id": book[0],
-            "title": book[1],
-            "image": book[2],
-            "content": book[3]
-        })
-    return render_template('404.html'), 404
-
-@app.route('/delete_book/<int:book_id>', methods=['POST'])
-def delete_book(book_id):
-    if not session.get('logged_in'):
-        return redirect('/login')
-
-    try:
-        with get_db_connection() as conn:
-            with conn.cursor() as cur:
-                # جلب رابط الصورة أولاً
-                cur.execute("SELECT image FROM books WHERE id = %s", (book_id,))
-                image_url = cur.fetchone()[0]
-                
-                # حذف الصورة من Cloudinary
-                public_id = image_url.split('/')[-1].split('.')[0]
-                cloudinary.uploader.destroy(f"book_covers/{public_id}")
-                
-                # حذف الكتاب من قاعدة البيانات
-                cur.execute("DELETE FROM books WHERE id = %s", (book_id,))
-                conn.commit()
+        # إضافة إلى Supabase
+        supabase.table("books").insert({
+            "title": title,
+            "content": content,
+            "image": image_url
+        }).execute()
 
         return redirect('/admin')
 
-    except Exception as e:
-        app.logger.error(f"Delete failed: {str(e)}")
-        return render_template('dashboard.html', error='فشل حذف الكتاب', books=load_books())
+    response = supabase.table("books").select("*").execute()
+    books = response.data or []
+    return render_template('dashboard.html', books=books)
 
-# ============ معالجة الأخطاء ============
-@app.errorhandler(404)
-def page_not_found(e):
-    return render_template('404.html'), 404
+# API للكتب
+@app.route('/api/books')
+def get_books():
+    response = supabase.table("books").select("*").execute()
+    return jsonify(response.data or [])
 
-@app.errorhandler(500)
-def internal_server_error(e):
-    return render_template('500.html'), 500
+# صفحة عرض كتاب
+@app.route('/book.html')
+def view_book():
+    book_id = request.args.get('id')
+    if not book_id:
+        return "الكتاب غير موجود", 404
+    response = supabase.table("books").select("*").eq('id', book_id).single().execute()
+    book = response.data
+    if not book:
+        return "الكتاب غير موجود", 404
+    return render_template('book.html', book=book)
+
+# حذف كتاب
+@app.route('/delete_book/<int:book_id>', methods=['POST'])
+def delete_book(book_id):
+    supabase.table("books").delete().eq("id", book_id).execute()
+    return redirect('/admin')
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
