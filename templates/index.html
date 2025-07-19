@@ -2,77 +2,84 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="google-site-verification" content="ajNGV2_lZAx4Jrs20pvFiopVAevaxv-jEx37Itqoajk" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>عادل درغام</title>
+  <meta name="google-site-verification" content="ajNGV2_lZAx4Jrs20pvFiopVAevaxv-jEx37Itqoajk" />
+  <title>عادل ضرغام</title>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
+
 <body>
+  <!-- رأس الصفحة -->
   <header class="main-header">
     <div class="container">
       <h1 class="site-title">عادل ضرغام</h1>
       <nav>
         <ul class="nav-links">
-          <li><a href="index.html" class="active">الرئيسية</a></li>
-          <li><a href="about.html">نبذة</a></li>
+          <li><a href="{{ url_for('home') }}" class="active">الرئيسية</a></li>
+          <li><a href="{{ url_for('about') }}">نبذة</a></li>
         </ul>
       </nav>
     </div>
   </header>
 
+  <!-- المقدمة -->
   <main>
     <section class="intro">
       <h2 class="intro-title">كاتب وناقد أدبي وأستاذ جامعي</h2>
       <div class="intro-content">
-<img src="{{ url_for('static', filename='uploads/adel.jpeg') }}" alt="صورة عادل ضرغام" class="author-img">
+        <img src="{{ url_for('static', filename='uploads/adel.jpeg') }}" alt="صورة عادل ضرغام" class="author-img">
         <div class="author-bio">
-          <p>د. عادل ضرغام، أستاذ الأدب والنقد في كلية دار العلوم - جامعة الفيوم...</p>
+          <p>د. عادل ضرغام، أستاذ الأدب والنقد في كلية دار العلوم - جامعة الفيوم، له العديد من المؤلفات الأدبية والنقدية المتميزة.</p>
         </div>
       </div>
     </section>
 
+    <!-- قسم الأعمال -->
     <section class="works">
       <h2 class="section-title">أعمال عادل ضرغام</h2>
       <div class="books-grid" id="books-grid">
-        <!-- Books will be populated by JavaScript -->
+        <!-- يتم تحميل الكتب ديناميكيًا عبر JavaScript -->
       </div>
     </section>
   </main>
 
-<footer>
-  <div class="container">
-    <p>© 2025 عادل ضرغام - جميع الحقوق محفوظة</p>
-    <p class="visitor-counter">👁️ عدد الزوار: {{ views }}</p>
-  </div>
-</footer>
+  <!-- التذييل -->
+  <footer>
+    <div class="container">
+      <p>© 2025 عادل ضرغام - جميع الحقوق محفوظة</p>
+      <p class="visitor-counter">👁️ عدد الزوار: {{ views }}</p>
+    </div>
+  </footer>
 
+  <!-- سكربت تحميل الكتب -->
   <script>
-  async function loadBooks() {
-    try {
-      const response = await fetch('/api/books');
-      const books = await response.json();
-      const booksGrid = document.getElementById('books-grid');
-      booksGrid.innerHTML = '';
-      books.forEach((book, index) => {
-        const bookElement = document.createElement('div');
-        bookElement.className = 'book';
-        bookElement.innerHTML = `
-          <img src="${book.image}" alt="${book.title}" class="book-img">
-          <div class="book-info">
-            <p><strong>${book.title}</strong></p>
-            <a href="book.html?id=${index}" class="read-more">اقرأ المزيد</a>
-          </div>
-        `;
-        booksGrid.appendChild(bookElement);
-      });
-    } catch (error) {
-      console.error("فشل في تحميل الكتب:", error);
-    }
-  }
+    async function loadBooks() {
+      try {
+        const response = await fetch('/api/books');
+        const books = await response.json();
+        const booksGrid = document.getElementById('books-grid');
+        booksGrid.innerHTML = '';
 
-  window.onload = loadBooks;
-</script>
+        books.forEach((book, index) => {
+          const bookElement = document.createElement('div');
+          bookElement.className = 'book';
+          bookElement.innerHTML = `
+            <img src="${book.image}" alt="${book.title}" class="book-img">
+            <div class="book-info">
+              <p><strong>${book.title}</strong></p>
+              <a href="/book/${book.id}" class="read-more">اقرأ المزيد</a>
+            </div>
+          `;
+          booksGrid.appendChild(bookElement);
+        });
+      } catch (error) {
+        console.error("فشل في تحميل الكتب:", error);
+      }
+    }
+
+    window.onload = loadBooks;
+  </script>
 
 </body>
 </html>
