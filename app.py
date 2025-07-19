@@ -13,8 +13,8 @@ app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "supersecretkey")  # استخدام متغير بيئي أو قيمة افتراضية
 
 # إعداد Supabase
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+SUPABASE_URL = os.getenv("SUPABASE_URL", "https://kbyxdwrmsxerpyvqhsyk.supabase.co")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtieXhkd3Jtc3hlcnB5dnFoc3lrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI5NDMyMTcsImV4cCI6MjA2ODUxOTIxN30.uiBqnNe-7r4OteS7HjYqEh_CzhFRZJelKBqIJiBsAz8")
 if not SUPABASE_URL or not SUPABASE_KEY:
     raise ValueError("SUPABASE_URL and SUPABASE_KEY must be set in environment variables")
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
