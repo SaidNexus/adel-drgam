@@ -3,3 +3,4 @@ requests
 cloudinary
 python-dotenv
 supabase
+gunicorn
