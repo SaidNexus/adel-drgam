@@ -1,65 +1,58 @@
 from flask import Flask, render_template, request, redirect, session, url_for
-import json
 import os
 import uuid
-from werkzeug.utils import secure_filename
 from supabase import create_client, Client
 import cloudinary
 import cloudinary.uploader
-import cloudinary.api
+from dotenv import load_dotenv
+
+# تحميل المتغيرات البيئية
+load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = "supersecretkey"
+app.secret_key = os.getenv("SECRET_KEY", "supersecretkey")  # استخدام متغير بيئي أو قيمة افتراضية
 
 # إعداد Supabase
-SUPABASE_URL = "YOUR_SUPABASE_URL"  # من Supabase Dashboard
-SUPABASE_KEY = "YOUR_SUPABASE_ANON_KEY"  # من Supabase Dashboard
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+if not SUPABASE_URL or not SUPABASE_KEY:
+    raise ValueError("SUPABASE_URL and SUPABASE_KEY must be set in environment variables")
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # إعداد Cloudinary
 cloudinary.config(
-    cloud_name="YOUR_CLOUD_NAME",  # من Cloudinary Dashboard
-    api_key="YOUR_API_KEY",  # من Cloudinary Dashboard
-    api_secret="YOUR_API_SECRET"  # من Cloudinary Dashboard
+    cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
+    api_key=os.getenv("CLOUDINARY_API_KEY"),
+    api_secret=os.getenv("CLOUDINARY_API_SECRET")
 )
+CLOUDINARY_UPLOAD_PRESET = os.getenv("CLOUDINARY_UPLOAD_PRESET")
+if not all([cloudinary.config().cloud_name, cloudinary.config().api_key, cloudinary.config().api_secret, CLOUDINARY_UPLOAD_PRESET]):
+    raise ValueError("Cloudinary configuration is incomplete")
 
 # الصفحة الرئيسية
 @app.route('/')
 @app.route('/index.html')
 def home():
-    # جلب الكتب من Supabase
-    response = supabase.table('books').select('*').execute()
-    books = response.data
-    session_key = 'visited_home'
-    if not session.get(session_key):
-        count = load_counter() + 1
-        save_counter(count)
-        session[session_key] = True
-    else:
-        count = load_counter()
-    return render_template('index.html', books=books, count=count)
-
-# عداد الزيارات (محلي)
-COUNTER_FILE = 'counter.json'
-
-def load_counter():
-    if not os.path.exists(COUNTER_FILE):
-        return 0
-    with open(COUNTER_FILE, 'r') as f:
-        return json.load(f).get("count", 0)
-
-def save_counter(count):
-    with open(COUNTER_FILE, 'w') as f:
-        json.dump({"count": count}, f)
+    try:
+        response = supabase.table('books').select('*').execute()
+        books = response.data or []
+    except Exception as e:
+        print(f"Error fetching books: {e}")
+        books = []
+    return render_template('index.html', books=books)
 
 # عرض كتاب
 @app.route('/book/<string:book_id>')
 def view_book(book_id):
-    response = supabase.table('books').select('*').eq('id', book_id).execute()
-    book = response.data[0] if response.data else None
-    if book:
-        return render_template('book.html', book=book)
-    return "الكتاب غير موجود", 404
+    try:
+        response = supabase.table('books').select('*').eq('id', book_id).execute()
+        book = response.data[0] if response.data else None
+        if book:
+            return render_template('book.html', book=book)
+        return "الكتاب غير موجود", 404
+    except Exception as e:
+        print(f"Error fetching book: {e}")
+        return "خطأ في جلب الكتاب", 500
 
 # صفحة تسجيل الدخول
 @app.route('/admin')
@@ -75,33 +68,40 @@ def dashboard():
         return redirect('/admin')
     
     if request.method == 'POST':
-        title = request.form['title']
-        content = request.form['content']
-        image = request.files.get('image')
+        try:
+            title = request.form['title']
+            content = request.form['content']
+            image = request.files.get('image')
 
-        image_url = ""
-        if image:
-            # رفع الصورة لـ Cloudinary
-            upload_result = cloudinary.uploader.upload(
-                image,
-                upload_preset="YOUR_UPLOAD_PRESET"  # من Cloudinary Dashboard
-            )
-            image_url = upload_result['secure_url']
+            image_url = ""
+            if image:
+                # رفع الصورة لـ Cloudinary
+                upload_result = cloudinary.uploader.upload(
+                    image,
+                    upload_preset=CLOUDINARY_UPLOAD_PRESET
+                )
+                image_url = upload_result['secure_url']
 
-        # إضافة الكتاب لـ Supabase
-        new_book = {
-            "id": str(uuid.uuid4()),
-            "title": title,
-            "content": content,
-            "image": image_url
-        }
-        supabase.table('books').insert(new_book).execute()
+            # إضافة الكتاب لـ Supabase
+            new_book = {
+                "id": str(uuid.uuid4()),
+                "title": title,
+                "content": content,
+                "image": image_url
+            }
+            supabase.table('books').insert(new_book).execute()
 
-        return redirect('/dashboard')
+            return redirect('/dashboard')
+        except Exception as e:
+            print(f"Error adding book: {e}")
+            return render_template('dashboard.html', books=[], error="خطأ في إضافة الكتاب")
 
-    # جلب الكتب من Supabase
-    response = supabase.table('books').select('*').execute()
-    books = response.data
+    try:
+        response = supabase.table('books').select('*').execute()
+        books = response.data or []
+    except Exception as e:
+        print(f"Error fetching books: {e}")
+        books = []
     return render_template('dashboard.html', books=books)
 
 # حذف كتاب
@@ -110,9 +110,12 @@ def delete_book(book_id):
     if not session.get("logged_in"):
         return redirect('/admin')
 
-    # حذف الكتاب من Supabase
-    supabase.table('books').delete().eq('id', book_id).execute()
-    return redirect('/dashboard')
+    try:
+        supabase.table('books').delete().eq('id', book_id).execute()
+        return redirect('/dashboard')
+    except Exception as e:
+        print(f"Error deleting book: {e}")
+        return "خطأ في حذف الكتاب", 500
 
 # تسجيل الدخول
 @app.route('/login', methods=['GET', 'POST'])
