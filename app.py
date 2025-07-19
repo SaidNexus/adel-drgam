@@ -6,11 +6,13 @@ from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 app.secret_key = "supersecretkey"
+
 BOOKS_FILE = 'books.json'
 COUNTER_FILE = 'counter.json'
 UPLOAD_FOLDER = 'static/uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
+# دوال التحميل والحفظ
 def load_books():
     if not os.path.exists(BOOKS_FILE):
         return []
@@ -31,7 +33,9 @@ def save_counter(count):
     with open(COUNTER_FILE, 'w') as f:
         json.dump({"count": count}, f)
 
+# الصفحة الرئيسية
 @app.route('/')
+@app.route('/index.html')  # دعم /index.html نفس /
 def home():
     books = load_books()
     session_key = 'visited_home'
@@ -43,6 +47,7 @@ def home():
         count = load_counter()
     return render_template('index.html', books=books, count=count)
 
+# عرض كتاب
 @app.route('/book/<string:book_id>')
 def view_book(book_id):
     books = load_books()
@@ -51,6 +56,7 @@ def view_book(book_id):
         return render_template('book.html', book=book)
     return "الكتاب غير موجود", 404
 
+# لوحة التحكم
 @app.route('/admin', methods=['GET', 'POST'])
 def admin():
     if not session.get("logged_in"):
@@ -61,12 +67,11 @@ def admin():
         content = request.form['content']
         image = request.files['image']
 
+        filename = ""
         if image:
             filename = secure_filename(image.filename)
             image_path = os.path.join(UPLOAD_FOLDER, filename)
             image.save(image_path)
-        else:
-            filename = ""
 
         new_book = {
             "id": str(uuid.uuid4()),
@@ -84,6 +89,7 @@ def admin():
     books = load_books()
     return render_template('admin.html', books=books)
 
+# حذف كتاب
 @app.route('/delete/<string:book_id>')
 def delete_book(book_id):
     if not session.get("logged_in"):
@@ -94,19 +100,27 @@ def delete_book(book_id):
     save_books(books)
     return redirect('/admin')
 
+# تسجيل الدخول
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    error = None
     if request.method == 'POST':
-        if request.form['username'] == "drgam" and request.form['password'] == "drgam":
+        username = request.form['username']
+        password = request.form['password']
+        if username == "drgam" and password == "drgam":
             session["logged_in"] = True
             return redirect("/admin")
-        return "كلمة السر أو اسم المستخدم غير صحيح"
-    return render_template('login.html')
+        else:
+            error = "كلمة السر أو اسم المستخدم غير صحيحة"
+    return render_template('login.html', error=error)
 
+# تسجيل الخروج
 @app.route('/logout')
 def logout():
     session.clear()
     return redirect("/")
+
+# صفحة النبذة
 @app.route('/about.html', endpoint='about')
 def about():
     return render_template('about.html')
