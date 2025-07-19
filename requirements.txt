@@ -1,5 +1,4 @@
-Flask==3.0.0
-psycopg2-binary==2.9.9
-Werkzeug==3.0.1
-python-dotenv==1.0.0
-cloudinary==1.37.0
+Flask
+requests
+cloudinary
+python-dotenv
