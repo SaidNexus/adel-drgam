@@ -21,11 +21,11 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # إعداد Cloudinary
 cloudinary.config(
-    cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
-    api_key=os.getenv("CLOUDINARY_API_KEY"),
-    api_secret=os.getenv("CLOUDINARY_API_SECRET")
+    cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME", "dbjm14xbf"),
+    api_key=os.getenv("CLOUDINARY_API_KEY", "329374832568726"),
+    api_secret=os.getenv("CLOUDINARY_API_SECRET", "gPanxHzfrwl2DW7C3cHHEnpspeU")
 )
-CLOUDINARY_UPLOAD_PRESET = os.getenv("CLOUDINARY_UPLOAD_PRESET")
+CLOUDINARY_UPLOAD_PRESET = os.getenv("CLOUDINARY_UPLOAD_PRESET", "mybooks")
 if not all([cloudinary.config().cloud_name, cloudinary.config().api_key, cloudinary.config().api_secret, CLOUDINARY_UPLOAD_PRESET]):
     raise ValueError("Cloudinary configuration is incomplete")
 
@@ -78,7 +78,8 @@ def dashboard():
                 # رفع الصورة لـ Cloudinary
                 upload_result = cloudinary.uploader.upload(
                     image,
-                    upload_preset=CLOUDINARY_UPLOAD_PRESET
+                    upload_preset=CLOUDINARY_UPLOAD_PRESET,
+                    folder="books"  # التأكد من إن الصور تترفع في مجلد books
                 )
                 image_url = upload_result['secure_url']
 
@@ -94,7 +95,7 @@ def dashboard():
             return redirect('/dashboard')
         except Exception as e:
             print(f"Error adding book: {e}")
-            return render_template('dashboard.html', books=[], error="خطأ في إضافة الكتاب")
+            return render_template('dashboard.html', books=[], error=f"خطأ في إضافة الكتاب: {str(e)}")
 
     try:
         response = supabase.table('books').select('*').execute()
