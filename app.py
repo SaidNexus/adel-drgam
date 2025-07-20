@@ -1,6 +1,5 @@
 from flask import Flask, render_template, request, redirect, session, url_for
 import os
-import uuid
 from supabase import create_client, Client
 import cloudinary
 import cloudinary.uploader
@@ -10,14 +9,20 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = os.getenv("SECRET_KEY", "supersecretkey")  # استخدام متغير بيئي أو قيمة افتراضية
+app.secret_key = os.getenv("SECRET_KEY", "supersecretkey")
 
 # إعداد Supabase
 SUPABASE_URL = os.getenv("SUPABASE_URL", "https://kbyxdwrmsxerpyvqhsyk.supabase.co")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtieXhkd3Jtc3hlcnB5dnFoc3lrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI5NDMyMTcsImV4cCI6MjA2ODUxOTIxN30.uiBqnNe-7r4OteS7HjYqEh_CzhFRZJelKBqIJiBsAz8")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtieXhkd3Jtc3hlcnB5dnFoc3lrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1Mjk0MzIxNywiZXhwIjoyMDY4NTE5MjE3fQ.e2_glmND7RKd_MNZrK3GnZQ6cXLD6sRSIK1AjtecFXI")
 if not SUPABASE_URL or not SUPABASE_KEY:
     raise ValueError("SUPABASE_URL and SUPABASE_KEY must be set in environment variables")
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+try:
+    supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+    print("Supabase client created successfully")
+except Exception as e:
+    print(f"Failed to create Supabase client: {str(e)}")
+    raise Exception(f"Supabase error: {str(e)}")
 
 # إعداد Cloudinary
 cloudinary.config(
@@ -34,15 +39,18 @@ if not all([cloudinary.config().cloud_name, cloudinary.config().api_key, cloudin
 @app.route('/index.html')
 def home():
     try:
-        response = supabase.table('books').select('*').execute()
+        response = supabase.table('books').select('*').executeਰ
+
+System: execute()
         books = response.data or []
+        print(f"Fetched books: {books}")
     except Exception as e:
-        print(f"Error fetching books: {e}")
+        print(f"Error fetching books: {str(e)}")
         books = []
     return render_template('index.html', books=books)
 
 # عرض كتاب
-@app.route('/book/<string:book_id>')
+@app.route('/book/<int:book_id>')
 def view_book(book_id):
     try:
         response = supabase.table('books').select('*').eq('id', book_id).execute()
@@ -51,7 +59,7 @@ def view_book(book_id):
             return render_template('book.html', book=book)
         return "الكتاب غير موجود", 404
     except Exception as e:
-        print(f"Error fetching book: {e}")
+        print(f"Error fetching book: {str(e)}")
         return "خطأ في جلب الكتاب", 500
 
 # صفحة تسجيل الدخول
@@ -69,44 +77,50 @@ def dashboard():
     
     if request.method == 'POST':
         try:
+            print("Starting book insertion process...")
             title = request.form['title']
             content = request.form['content']
             image = request.files.get('image')
 
+            print(f"Received form data: title={title}, content={content}, image={image}")
+
             image_url = ""
             if image:
-                # رفع الصورة لـ Cloudinary
+                print("Uploading image to Cloudinary...")
                 upload_result = cloudinary.uploader.upload(
                     image,
                     upload_preset=CLOUDINARY_UPLOAD_PRESET,
-                    folder="books"  # التأكد من إن الصور تترفع في مجلد books
+                    folder="books"
                 )
                 image_url = upload_result['secure_url']
+                print(f"Image uploaded successfully: {image_url}")
 
-            # إضافة الكتاب لـ Supabase
             new_book = {
-                "id": str(uuid.uuid4()),
                 "title": title,
                 "content": content,
                 "image": image_url
             }
-            supabase.table('books').insert(new_book).execute()
+            print(f"Inserting book: {new_book}")
+
+            response = supabase.table('books').insert(new_book).execute()
+            print(f"Insert response: {response.data}")
 
             return redirect('/dashboard')
         except Exception as e:
-            print(f"Error adding book: {e}")
+            print(f"Error adding book: {str(e)}")
             return render_template('dashboard.html', books=[], error=f"خطأ في إضافة الكتاب: {str(e)}")
 
     try:
         response = supabase.table('books').select('*').execute()
         books = response.data or []
+        print(f"Fetched books: {books}")
     except Exception as e:
-        print(f"Error fetching books: {e}")
+        print(f"Error fetching books: {str(e)}")
         books = []
     return render_template('dashboard.html', books=books)
 
 # حذف كتاب
-@app.route('/delete/<string:book_id>')
+@app.route('/delete/<int:book_id>')
 def delete_book(book_id):
     if not session.get("logged_in"):
         return redirect('/admin')
@@ -115,7 +129,7 @@ def delete_book(book_id):
         supabase.table('books').delete().eq('id', book_id).execute()
         return redirect('/dashboard')
     except Exception as e:
-        print(f"Error deleting book: {e}")
+        print(f"Error deleting book: {str(e)}")
         return "خطأ في حذف الكتاب", 500
 
 # تسجيل الدخول
@@ -142,3 +156,6 @@ def logout():
 @app.route('/about.html', endpoint='about')
 def about():
     return render_template('about.html')
+
+if __name__ == '__main__':
+    app.run(debug=True)
