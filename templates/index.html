@@ -31,8 +31,6 @@
         <img src="{{ url_for('static', filename='Uploads/adel.jpeg') }}" alt="صورة عادل ضرغام" class="author-img">
         <div class="author-bio">
           <p>د. عادل ضرغام، أستاذ الأدب والنقد في كلية دار العلوم - جامعة الفيوم، له العديد من المؤلفات الأدبية والنقدية المتميزة.</p>
-          <!-- عرض العداد -->
-          <p class="visitor-counter">عدد الزوار: <span id="visitor-count">{{ visitor_count }}</span></p>
         </div>
       </div>
     </section>
@@ -42,7 +40,7 @@
       <h2 class="section-title">أعمال عادل ضرغام</h2>
       <div class="books-grid" id="books-grid">
         {% if books %}
-          {% for book in books %}
+          {% for book in books if book.id != 1 %}
             <div class="book">
               {% if book.image %}
                 <img src="{{ book.image }}" alt="{{ book.title }}" class="book-img">
@@ -66,6 +64,8 @@
   <footer>
     <div class="container">
       <p>© 2025 عادل ضرغام - جميع الحقوق محفوظة</p>
+      <!-- عرض العداد -->
+      <p class="visitor-counter">عدد الزوار: <span id="visitor-count">{{ visitor_count }}</span></p>
     </div>
   </footer>
 </body>
