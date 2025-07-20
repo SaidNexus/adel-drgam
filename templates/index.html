@@ -7,6 +7,8 @@
   <title>عادل ضرغام</title>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <!-- إضافة مكتبة Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
 <body>
@@ -31,6 +33,8 @@
         <img src="{{ url_for('static', filename='Uploads/adel.jpeg') }}" alt="صورة عادل ضرغام" class="author-img">
         <div class="author-bio">
           <p>د. عادل ضرغام، أستاذ الأدب والنقد في كلية دار العلوم - جامعة الفيوم، له العديد من المؤلفات الأدبية والنقدية المتميزة.</p>
+          <!-- إضافة العداد -->
+          <p class="visitor-counter">عدد الزوار: <span id="visitor-count">0</span></p>
         </div>
       </div>
     </section>
@@ -66,5 +70,56 @@
       <p>© 2025 عادل ضرغام - جميع الحقوق محفوظة</p>
     </div>
   </footer>
+
+  <!-- سكريبت العداد -->
+  <script>
+    // إعداد Supabase Client
+    const supabaseUrl = 'YOUR_SUPABASE_URL'; // استبدل بـ URL الخاص بك
+    const supabaseKey = 'YOUR_SUPABASE_KEY'; // استبدل بـ Public Key الخاص بك
+    const supabase = Supabase.createClient(supabaseUrl, supabaseKey);
+
+    // دالة لزيادة عدد الزوار
+    async function incrementVisitorCount() {
+      try {
+        // استرجاع العداد الحالي
+        const { data, error } = await supabase
+          .from('visitor_count')
+          .select('count')
+          .eq('id', 1)
+          .single();
+
+        if (error) throw error;
+
+        // إذا لم يكن هناك سجل، أنشئ واحدًا
+        let newCount = 1;
+        if (data) {
+          newCount = data.count + 1;
+          // تحديث العداد
+          const { error: updateError } = await supabase
+            .from('visitor_count')
+            .update({ count: newCount })
+            .eq('id', 1);
+
+          if (updateError) throw updateError;
+        } else {
+          // إنشاء سجل جديد
+          const { error: insertError } = await supabase
+            .from('visitor_count')
+            .insert([{ id: 1, count: 1 }]);
+
+          if (insertError) throw insertError;
+        }
+
+        // عرض العداد على الصفحة
+        document.getElementById('visitor-count').textContent = newCount;
+      } catch (error) {
+        console.error('خطأ:', error.message);
+        document.getElementById('visitor-count').textContent = 'خطأ في تحميل العداد';
+      }
+    }
+
+    // استدعاء الدالة عند تحميل الصفحة
+    window.onload = incrementVisitorCount;
+  </script>
 </body>
 </html>
