@@ -39,13 +39,25 @@ if not all([cloudinary.config().cloud_name, cloudinary.config().api_key, cloudin
 @app.route('/index.html')
 def home():
     try:
+        # جلب الكتب
         response = supabase.table('books').select('*').execute()
         books = response.data or []
         print(f"Fetched books: {books}")
+
+        # زيادة عداد الزوار
+        response = supabase.table('visitor_count').select('count').eq('id', 1).execute()
+        if response.data:
+            new_count = response.data[0]['count'] + 1
+            supabase.table('visitor_count').update({'count': new_count}).eq('id', 1).execute()
+        else:
+            supabase.table('visitor_count').insert({'id': 1, 'count': 1}).execute()
+            new_count = 1
+        print(f"Visitor count updated: {new_count}")
     except Exception as e:
-        print(f"Error fetching books: {str(e)}")
+        print(f"Error in home route: {str(e)}")
         books = []
-    return render_template('index.html', books=books)
+        new_count = 0  # في حالة الخطأ، نعرض 0
+    return render_template('index.html', books=books, visitor_count=new_count)
 
 # عرض كتاب
 @app.route('/book/<int:book_id>')
