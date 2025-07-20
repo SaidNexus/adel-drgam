@@ -81,10 +81,10 @@
     // دالة لزيادة عدد الزوار
     async function incrementVisitorCount() {
       try {
-        // استرجاع العداد الحالي
+        // استرجاع العداد الحالي من العمود visitor_count
         const { data, error } = await supabase
-          .from('visitor_count')
-          .select('count')
+          .from('site_data') // غيّر site_data باسم الجدول بتاعك
+          .select('visitor_count')
           .eq('id', 1)
           .single();
 
@@ -93,19 +93,19 @@
         // إذا لم يكن هناك سجل، أنشئ واحدًا
         let newCount = 1;
         if (data) {
-          newCount = data.count + 1;
+          newCount = data.visitor_count + 1;
           // تحديث العداد
           const { error: updateError } = await supabase
-            .from('visitor_count')
-            .update({ count: newCount })
+            .from('site_data')
+            .update({ visitor_count: newCount })
             .eq('id', 1);
 
           if (updateError) throw updateError;
         } else {
           // إنشاء سجل جديد
           const { error: insertError } = await supabase
-            .from('visitor_count')
-            .insert([{ id: 1, count: 1 }]);
+            .from('site_data')
+            .insert([{ id: 1, visitor_count: 1 }]);
 
           if (insertError) throw insertError;
         }
