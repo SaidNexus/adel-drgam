@@ -64,8 +64,9 @@
   <footer>
     <div class="container">
       <p>© 2025 عادل ضرغام - جميع الحقوق محفوظة</p>
-      <!-- عرض العداد -->
-      <p class="visitor-counter">عدد الزوار: <span id="visitor-count">{{ visitor_count }}</span></p>
+      {% if session.get('logged_in') %}
+        <p class="visitor-counter">عدد الزوار: <span id="visitor-count">{{ visitor_count }}</span></p>
+      {% endif %}
     </div>
   </footer>
 </body>
