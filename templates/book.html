@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>عادل ضرغام - تفاصيل الكتاب</title>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ book.title }} - عادل ضرغام</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
   <style>
     .book-content-full {
       background: #fdfdfd;
@@ -44,6 +44,7 @@
 </head>
 <body>
 
+  <!-- رأس الصفحة -->
   <header class="main-header">
     <div class="container">
       <h1 class="site-title">عادل ضرغام</h1>
@@ -56,72 +57,40 @@
     </div>
   </header>
 
+  <!-- المحتوى الرئيسي -->
   <main>
     <section class="book-details">
-      <h2 class="section-title" id="book-title"></h2>
+      <h2 class="section-title">{{ book.title }}</h2>
       <div class="book-content">
-        <img src="" alt="" class="book-img" id="book-image">
-        <div id="book-content-full" class="book-content-full"></div>
-        <div id="chapters"></div>
+        {% if book.image %}
+          <img src="{{ book.image }}" alt="غلاف كتاب {{ book.title }}" class="book-img" />
+        {% else %}
+          <img src="{{ url_for('static', filename='images/placeholder.jpg') }}" alt="صورة افتراضية" class="book-img" />
+        {% endif %}
+
+        {% if book.content %}
+          <div class="book-content-full">{{ book.content }}</div>
+        {% endif %}
+
+        {% if book.chapters %}
+          <div id="chapters">
+            {% for chapter in book.chapters %}
+              <div class="chapter">
+                <h3 class="chapter-title">{{ chapter.title }}</h3>
+                <p>{{ chapter.content }}</p>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
       </div>
     </section>
   </main>
 
+  <!-- التذييل -->
   <footer>
     <div class="container">
       <p>© 2025 عادل ضرغام - جميع الحقوق محفوظة</p>
     </div>
   </footer>
-
-  <script>
-    window.onload = async function () {
-      const params = new URLSearchParams(window.location.search);
-      const bookId = parseInt(params.get('id'), 10);
-
-      try {
-        const response = await fetch('/api/books');
-        const books = await response.json();
-
-        if (!isNaN(bookId) && bookId >= 0 && bookId < books.length) {
-          const book = books[bookId];
-
-          // العنوان
-          document.getElementById('book-title').textContent = book.title;
-
-          // الصورة
-          const bookImage = document.getElementById('book-image');
-          bookImage.src = book.image;
-          bookImage.alt = `غلاف كتاب: ${book.title}`;
-
-          // المحتوى الكامل
-          if (book.content) {
-            document.getElementById('book-content-full').textContent = book.content;
-          }
-
-          // الفصول (إن وجدت)
-          if (Array.isArray(book.chapters)) {
-            const chaptersDiv = document.getElementById('chapters');
-            book.chapters.forEach(chapter => {
-              const chapterElement = document.createElement('div');
-              chapterElement.className = 'chapter';
-              chapterElement.innerHTML = `
-                <h3 class="chapter-title">${chapter.title}</h3>
-                <p>${chapter.content}</p>
-              `;
-              chaptersDiv.appendChild(chapterElement);
-            });
-          }
-
-        } else {
-          document.getElementById('book-title').textContent = 'الكتاب غير موجود';
-          document.getElementById('book-content-full').textContent = '';
-          document.getElementById('chapters').innerHTML = '<p>لم يتم العثور على تفاصيل الكتاب.</p>';
-        }
-      } catch (error) {
-        console.error("حدث خطأ أثناء تحميل تفاصيل الكتاب:", error);
-        document.getElementById('book-title').textContent = 'خطأ في تحميل البيانات';
-      }
-    };
-  </script>
 </body>
 </html>
