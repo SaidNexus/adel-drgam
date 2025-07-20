@@ -45,12 +45,12 @@ def home():
         print(f"Fetched books: {books}")
 
         # زيادة عداد الزوار
-        response = supabase.table('visitor_count').select('count').eq('id', 1).execute()
-        if response.data:
-            new_count = response.data[0]['count'] + 1
-            supabase.table('visitor_count').update({'count': new_count}).eq('id', 1).execute()
+        response = supabase.table('books').select('visitor_count').eq('id', 1).execute()
+        if response.data and response.data[0]['visitor_count'] is not None:
+            new_count = response.data[0]['visitor_count'] + 1
+            supabase.table('books').update({'visitor_count': new_count}).eq('id', 1).execute()
         else:
-            supabase.table('visitor_count').insert({'id': 1, 'count': 1}).execute()
+            supabase.table('books').insert({'id': 1, 'visitor_count': 1, 'title': 'Counter Record', 'content': ''}).execute()
             new_count = 1
         print(f"Visitor count updated: {new_count}")
     except Exception as e:
@@ -108,7 +108,8 @@ def dashboard():
             new_book = {
                 "title": title,
                 "content": content,
-                "image": image_url
+                "image": image_url,
+                "visitor_count": 0  # إضافة قيمة افتراضية للعمود الجديد
             }
             print(f"Inserting book: {new_book}")
 
