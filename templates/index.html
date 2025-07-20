@@ -28,7 +28,7 @@
     <section class="intro">
       <h2 class="intro-title">كاتب وناقد أدبي وأستاذ جامعي</h2>
       <div class="intro-content">
-        <img src="{{ url_for('static', filename='uploads/adel.jpeg') }}" alt="صورة عادل ضرغام" class="author-img">
+        <img src="{{ url_for('static', filename='Uploads/adel.jpeg') }}" alt="صورة عادل ضرغام" class="author-img">
         <div class="author-bio">
           <p>د. عادل ضرغام، أستاذ الأدب والنقد في كلية دار العلوم - جامعة الفيوم، له العديد من المؤلفات الأدبية والنقدية المتميزة.</p>
         </div>
@@ -39,7 +39,23 @@
     <section class="works">
       <h2 class="section-title">أعمال عادل ضرغام</h2>
       <div class="books-grid" id="books-grid">
-        <!-- يتم تحميل الكتب ديناميكيًا عبر JavaScript -->
+        {% if books %}
+          {% for book in books %}
+            <div class="book">
+              {% if book.image %}
+                <img src="{{ book.image }}" alt="{{ book.title }}" class="book-img">
+              {% else %}
+                <img src="{{ url_for('static', filename='images/placeholder.jpg') }}" alt="صورة افتراضية" class="book-img">
+              {% endif %}
+              <div class="book-info">
+                <p><strong>{{ book.title }}</strong></p>
+                <a href="{{ url_for('view_book', book_id=book.id) }}" class="read-more">اقرأ المزيد</a>
+              </div>
+            </div>
+          {% endfor %}
+        {% else %}
+          <p>لا توجد كتب متاحة حاليًا.</p>
+        {% endif %}
       </div>
     </section>
   </main>
@@ -48,38 +64,7 @@
   <footer>
     <div class="container">
       <p>© 2025 عادل ضرغام - جميع الحقوق محفوظة</p>
-      <p class="visitor-counter">👁️ عدد الزوار: {{ views }}</p>
     </div>
   </footer>
-
-  <!-- سكربت تحميل الكتب -->
-  <script>
-    async function loadBooks() {
-      try {
-        const response = await fetch('/api/books');
-        const books = await response.json();
-        const booksGrid = document.getElementById('books-grid');
-        booksGrid.innerHTML = '';
-
-        books.forEach((book, index) => {
-          const bookElement = document.createElement('div');
-          bookElement.className = 'book';
-          bookElement.innerHTML = `
-            <img src="${book.image}" alt="${book.title}" class="book-img">
-            <div class="book-info">
-              <p><strong>${book.title}</strong></p>
-              <a href="/book/${book.id}" class="read-more">اقرأ المزيد</a>
-            </div>
-          `;
-          booksGrid.appendChild(bookElement);
-        });
-      } catch (error) {
-        console.error("فشل في تحميل الكتب:", error);
-      }
-    }
-
-    window.onload = loadBooks;
-  </script>
-
 </body>
 </html>
