@@ -39,9 +39,7 @@ if not all([cloudinary.config().cloud_name, cloudinary.config().api_key, cloudin
 @app.route('/index.html')
 def home():
     try:
-        response = supabase.table('books').select('*').executeਰ
-
-System: execute()
+        response = supabase.table('books').select('*').execute()
         books = response.data or []
         print(f"Fetched books: {books}")
     except Exception as e:
