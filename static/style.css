@@ -294,64 +294,43 @@ footer p {
     height: 150px;
   }
 }
-/* === Search Bar Styling === */
-.search-container {
+/* === Search Bar Section === */
+.search-bar {
   margin: 20px auto;
   display: flex;
   justify-content: center;
-  max-width: 400px;
+  align-items: center;
+  gap: 15px;
+  max-width: 500px;
+  padding: 10px;
 }
 
-.search-container input {
+/* Input Box */
+.search-bar input {
   flex: 1;
   padding: 12px 15px;
   border: 2px solid #ddd;
-  border-radius: 30px 0 0 30px;
+  border-radius: 30px;
   outline: none;
   font-size: 16px;
   transition: all 0.3s ease;
   background: #f9f9f9;
 }
 
-.search-container input:focus {
+.search-bar input:focus {
   border-color: #ff9800;
   background: #fff;
 }
 
-.search-container button {
-  padding: 12px 20px;
-  border: none;
+/* Book Counter */
+#book-count {
   background: #ff9800;
   color: #fff;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: bold;
-  border-radius: 0 30px 30px 0;
-  cursor: pointer;
-  transition: all 0.3s ease;
+  border-radius: 20px;
+  padding: 8px 15px;
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
 }
 
-.search-container button:hover {
-  background: #e68900;
-}
-
-/* === Counter / Badge Styling === */
-.counter {
-  position: relative;
-  display: inline-block;
-}
-
-.counter span {
-  position: absolute;
-  top: -8px;
-  right: -8px;
-  background: red;
-  color: #fff;
-  font-size: 13px;
-  font-weight: bold;
-  border-radius: 50%;
-  padding: 3px 7px;
-  min-width: 20px;
-  text-align: center;
-  line-height: 1.2;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-}
