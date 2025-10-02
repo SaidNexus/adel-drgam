@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>مكتبة عادل ضرغام</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- الهيدر -->
+  <header>
+    <div class="container">
+      <h1>مكتبة عادل ضرغام</h1>
+      <nav>
+        <a href="index.html">الرئيسية</a>
+        <a href="about.html">عن الكاتب</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- قسم الأعمال -->
+  <section class="works">
+    <h2 class="section-title">أعمال عادل ضرغام</h2>
+
+    <!-- شريط البحث والعداد -->
+    <div class="books-header">
+      <input 
+        type="text" 
+        id="searchInput" 
+        placeholder="ابحث عن كتاب..." 
+        onkeyup="filterBooks()" 
+      />
+      <span class="books-count">عدد الكتب: <span id="booksCount">0</span></span>
+    </div>
+
+    <div class="books-grid" id="books-grid">
+      <!-- مثال لكتاب -->
+      <div class="book">
+        <img src="https://via.placeholder.com/150" alt="كتاب 1" class="book-img">
+        <div class="book-info">
+          <p><strong>كتاب تجريبي 1</strong></p>
+          <a href="#" class="read-more">اقرأ المزيد</a>
+        </div>
+      </div>
+
+      <div class="book">
+        <img src="https://via.placeholder.com/150" alt="كتاب 2" class="book-img">
+        <div class="book-info">
+          <p><strong>كتاب تجريبي 2</strong></p>
+          <a href="#" class="read-more">اقرأ المزيد</a>
+        </div>
+      </div>
+
+      <div class="book">
+        <img src="https://via.placeholder.com/150" alt="كتاب 3" class="book-img">
+        <div class="book-info">
+          <p><strong>كتاب تجريبي 3</strong></p>
+          <a href="#" class="read-more">اقرأ المزيد</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- الفوتر -->
+  <footer>
+    <p>جميع الحقوق محفوظة © 2025</p>
+  </footer>
+
+  <!-- سكريبت البحث -->
+  <script>
+    function filterBooks() {
+      const input = document.getElementById("searchInput").value.toLowerCase();
+      const books = document.querySelectorAll(".book");
+      let visibleCount = 0;
+
+      books.forEach(book => {
+        const title = book.querySelector("p").innerText.toLowerCase();
+        if (title.includes(input)) {
+          book.style.display = "block";
+          visibleCount++;
+        } else {
+          book.style.display = "none";
+        }
+      });
+
+      // تحديث العداد
+      document.getElementById("booksCount").innerText = visibleCount;
+    }
+
+    // عند تحميل الصفحة: ضبط العدد الابتدائي
+    window.onload = () => {
+      document.getElementById("booksCount").innerText =
+        document.querySelectorAll(".book").length;
+    };
+  </script>
+</body>
+</html>
