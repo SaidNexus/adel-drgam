@@ -2,81 +2,93 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
+  <link rel="icon" href="/https://res.cloudinary.com/dbjm14xbf/image/upload/v1752977782/books/image_nbdtpo.jpg" type="image/png">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>مكتبة عادل ضرغام</title>
-  <link rel="stylesheet" href="style.css">
+  <meta name="description" content="الموقع الرسمي لعادل درغام">
+  <meta name="google-site-verification" content="ajNGV2_lZAx4Jrs20pvFiopVAevaxv-jEx37Itqoajk" />
+  <title>عادل ضرغام</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-<body>
 
-  <!-- الهيدر -->
-  <header>
+<body>
+  <!-- رأس الصفحة -->
+  <header class="main-header">
     <div class="container">
-      <h1>مكتبة عادل ضرغام</h1>
+      <h1 class="site-title">عادل ضرغام</h1>
       <nav>
-        <a href="index.html">الرئيسية</a>
-        <a href="about.html">عن الكاتب</a>
+        <ul class="nav-links">
+          <li><a href="{{ url_for('home') }}" class="active">الرئيسية</a></li>
+          <li><a href="{{ url_for('about') }}">نبذة</a></li>
+        </ul>
       </nav>
     </div>
   </header>
 
-  <!-- قسم الأعمال -->
-  <section class="works">
-    <h2 class="section-title">أعمال عادل ضرغام</h2>
-
-    <!-- شريط البحث والعداد -->
-    <div class="books-header">
-      <input 
-        type="text" 
-        id="searchInput" 
-        placeholder="ابحث عن كتاب..." 
-        onkeyup="filterBooks()" 
-      />
-      <span class="books-count">عدد الكتب: <span id="booksCount">0</span></span>
-    </div>
-
-    <div class="books-grid" id="books-grid">
-      <!-- مثال لكتاب -->
-      <div class="book">
-        <img src="https://via.placeholder.com/150" alt="كتاب 1" class="book-img">
-        <div class="book-info">
-          <p><strong>كتاب تجريبي 1</strong></p>
-          <a href="#" class="read-more">اقرأ المزيد</a>
+  <!-- المقدمة -->
+  <main>
+    <section class="intro">
+      <h2 class="intro-title">كاتب وناقد أدبي وأستاذ جامعي</h2>
+      <div class="intro-content">
+        <img src="{{ url_for('static', filename='uploads/adel.jpeg') }}" alt="صورة عادل ضرغام" class="author-img">
+        <div class="author-bio">
+          <p>د. عادل ضرغام، أستاذ الأدب والنقد في كلية دار العلوم - جامعة الفيوم، له العديد من المؤلفات الأدبية والنقدية المتميزة.</p>
         </div>
       </div>
+    </section>
 
-      <div class="book">
-        <img src="https://via.placeholder.com/150" alt="كتاب 2" class="book-img">
-        <div class="book-info">
-          <p><strong>كتاب تجريبي 2</strong></p>
-          <a href="#" class="read-more">اقرأ المزيد</a>
-        </div>
+    <!-- البحث + العداد -->
+    <section class="search-bar">
+      <input type="text" id="searchInput" placeholder="ابحث عن كتاب...">
+      <span id="book-count">عدد الكتب: {{ books|length - 1 }}</span>
+    </section>
+
+    <!-- قسم الأعمال -->
+    <section class="works">
+      <h2 class="section-title">أعمال عادل ضرغام</h2>
+      <div class="books-grid" id="books-grid">
+        {% if books %}
+          {% for book in books if book.id != 1 %}
+            <div class="book" data-title="{{ book.title }}">
+              {% if book.image %}
+                <img src="{{ book.image }}" alt="{{ book.title }}" class="book-img">
+              {% else %}
+                <img src="{{ url_for('static', filename='images/placeholder.jpg') }}" alt="صورة افتراضية" class="book-img">
+              {% endif %}
+              <div class="book-info">
+                <p><strong>{{ book.title }}</strong></p>
+                <a href="{{ url_for('view_book', book_id=book.id) }}" class="read-more">اقرأ المزيد</a>
+              </div>
+            </div>
+          {% endfor %}
+        {% else %}
+          <p>لا توجد كتب متاحة حاليًا.</p>
+        {% endif %}
       </div>
+    </section>
+  </main>
 
-      <div class="book">
-        <img src="https://via.placeholder.com/150" alt="كتاب 3" class="book-img">
-        <div class="book-info">
-          <p><strong>كتاب تجريبي 3</strong></p>
-          <a href="#" class="read-more">اقرأ المزيد</a>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- الفوتر -->
+  <!-- التذييل -->
   <footer>
-    <p>جميع الحقوق محفوظة © 2025</p>
+    <div class="container">
+      <p>© 2025 عادل ضرغام - جميع الحقوق محفوظة</p>
+      <p class="visitor-counter">عدد الزوار: <span id="visitor-count">{{ visitor_count }}</span></p>
+    </div>
   </footer>
 
-  <!-- سكريبت البحث -->
   <script>
-    function filterBooks() {
-      const input = document.getElementById("searchInput").value.toLowerCase();
-      const books = document.querySelectorAll(".book");
+    // البحث
+    const searchInput = document.getElementById("searchInput");
+    const books = document.querySelectorAll(".book");
+    const countSpan = document.getElementById("book-count");
+
+    searchInput.addEventListener("input", function () {
+      let searchValue = this.value.toLowerCase();
       let visibleCount = 0;
 
       books.forEach(book => {
-        const title = book.querySelector("p").innerText.toLowerCase();
-        if (title.includes(input)) {
+        let title = book.dataset.title.toLowerCase();
+        if (title.includes(searchValue)) {
           book.style.display = "block";
           visibleCount++;
         } else {
@@ -84,15 +96,8 @@
         }
       });
 
-      // تحديث العداد
-      document.getElementById("booksCount").innerText = visibleCount;
-    }
-
-    // عند تحميل الصفحة: ضبط العدد الابتدائي
-    window.onload = () => {
-      document.getElementById("booksCount").innerText =
-        document.querySelectorAll(".book").length;
-    };
+      countSpan.textContent = "عدد الكتب: " + visibleCount;
+    });
   </script>
 </body>
 </html>
