@@ -143,3 +143,32 @@ footer {
   padding: 1rem 0;
   margin-top: 3rem;
 }
+/* ... كل الكود بتاعك زي ما هو فوق ... */
+
+/* Search bar */
+.search-bar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin: 2rem auto;
+  max-width: 600px;
+}
+
+.search-bar input {
+  flex: 1;
+  padding: 0.8rem;
+  font-size: 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-family: 'Cairo', sans-serif;
+}
+
+.search-bar span {
+  background: #2b6cb0;
+  color: white;
+  padding: 0.7rem 1.2rem;
+  border-radius: 8px;
+  font-weight: bold;
+}
+
