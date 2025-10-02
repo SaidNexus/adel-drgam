@@ -294,42 +294,47 @@ footer p {
     height: 150px;
   }
 }
-/* 🔎 SEARCH BAR */
+/* === Search Bar Styling === */
 .search-container {
   margin: 20px auto;
   display: flex;
   justify-content: center;
+  max-width: 400px;
 }
 
 .search-container input {
-  padding: 10px 15px;
-  border: 2px solid #ccc;
-  border-radius: 25px 0 0 25px;
+  flex: 1;
+  padding: 12px 15px;
+  border: 2px solid #ddd;
+  border-radius: 30px 0 0 30px;
   outline: none;
-  width: 250px;
-  transition: 0.3s;
+  font-size: 16px;
+  transition: all 0.3s ease;
+  background: #f9f9f9;
 }
 
 .search-container input:focus {
   border-color: #ff9800;
+  background: #fff;
 }
 
 .search-container button {
-  padding: 10px 15px;
+  padding: 12px 20px;
   border: none;
   background: #ff9800;
   color: #fff;
+  font-size: 16px;
   font-weight: bold;
-  border-radius: 0 25px 25px 0;
+  border-radius: 0 30px 30px 0;
   cursor: pointer;
-  transition: 0.3s;
+  transition: all 0.3s ease;
 }
 
 .search-container button:hover {
   background: #e68900;
 }
 
-/* 🔢 COUNTER / BADGE */
+/* === Counter / Badge Styling === */
 .counter {
   position: relative;
   display: inline-block;
@@ -341,8 +346,12 @@ footer p {
   right: -8px;
   background: red;
   color: #fff;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: bold;
   border-radius: 50%;
-  padding: 2px 6px;
+  padding: 3px 7px;
+  min-width: 20px;
+  text-align: center;
+  line-height: 1.2;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
 }
