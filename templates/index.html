@@ -37,10 +37,11 @@
       </div>
     </section>
 
-    <!-- البحث + العداد -->
-    <section class="search-bar" style="display: flex; justify-content: center; align-items: center; gap: 15px; margin-bottom: 30px;">
-      <span id="book-count">عدد الكتب: {{ books|length - 1 }}</span>
+    <!-- البحث + عداد الزوار -->
+    <section class="search-bar" style="display: flex; justify-content: center; align-items: center; gap: 25px; margin-bottom: 30px; flex-wrap: wrap;">
       <input type="text" id="searchInput" placeholder="ابحث عن كتاب...">
+      <span id="book-count">عدد الكتب: {{ books|length - 1 }}</span>
+      <p class="visitor-counter" style="margin: 0;">عدد الزوار: <span id="visitor-count">{{ visitor_count }}</span></p>
     </section>
 
     <!-- قسم الأعمال -->
@@ -72,7 +73,6 @@
   <footer>
     <div class="container">
       <p>© 2025 عادل ضرغام - جميع الحقوق محفوظة</p>
-      <p class="visitor-counter">عدد الزوار: <span id="visitor-count">{{ visitor_count }}</span></p>
     </div>
   </footer>
 
